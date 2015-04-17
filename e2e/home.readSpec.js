@@ -28,7 +28,7 @@ describe('homepage read >', function () {
 	it('sees delete of an item', function() {
 		browser.wait(function() {
 			return home.simpleTypes().count().then(function(itemCount) {
-				return itemCount == 0;
+				return itemCount === 0;
 			});
 		});
 		expect(home.simpleTypes().count()).toEqual(0);

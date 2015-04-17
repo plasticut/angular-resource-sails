@@ -39,7 +39,7 @@ describe('sailsResource >', function () {
 			prefix: '/api'
 		};
 
-		service = sailsResource('widget', actions, options)
+		service = sailsResource('widget', actions, options);
 	}));
 
 	it('requires a model name', inject(function (sailsResource) {

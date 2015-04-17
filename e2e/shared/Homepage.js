@@ -67,7 +67,7 @@ var Homepage = function () {
 		},
 
 		delete: function() {
-			return newSimple().element(by.css('.btn[ng-click="home.deleteSimple(simple)"]'))
+			return newSimple().element(by.css('.btn[ng-click="home.deleteSimple(simple)"]'));
 		}
 	};
 

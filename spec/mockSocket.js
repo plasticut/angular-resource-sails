@@ -101,7 +101,7 @@ angular.module('sailsResource').factory('mockSocket', function() {
 					}
 				});
 
-				if(foundIndex == null) {
+				if (foundIndex === null) {
 					callback({ status: 404, error: 'E_NOTFOUND', summary: 'Widget with id ' + id + ' could not be found'});
 				}
 				else {

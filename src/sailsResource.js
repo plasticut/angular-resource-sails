@@ -1,6 +1,7 @@
 //io.sails.autoConnect = false;
 
 (function (angular) {
+	'use strict';
 
 	var forEach = angular.forEach,
 		copy = angular.copy,
@@ -100,7 +101,7 @@
 
 		return function (model, actions, options) {
 
-			if (typeof model != 'string' || model.length == 0) {
+			if (typeof model !== 'string' || model.length === 0) {
 				throw 'Model name is required';
 			}
 
@@ -128,7 +129,7 @@
 								foundIndex = index;
 							}
 						});
-						if (foundIndex != null) {
+						if (foundIndex !== null) {
 							cacheItem.splice(foundIndex, 1);
 						}
 					}
@@ -198,8 +199,8 @@
 					item.$resolved = true;
 
 					if (jwr.error || jwr.statusCode > 400 || isString(data)) {
-						$log.error(data, jwr);
-						deferred.reject(jwr.error || jwr, item, data);
+						if (options.verbose) { $log.error(data, jwr); }
+						deferred.reject(jwr, item, data);
 					}
 					else if (!isArray(item) && isArray(data) && data.length != 1) {
 						// This scenario occurs when GET is done without an id and Sails returns an array. Since the cached
@@ -207,7 +208,7 @@
 						var errorMessage = (data.length ? 'Multiple' : 'No') +
 							' items found while performing GET on a singular \'' + model + '\' Resource; did you mean to do a query?';
 
-						$log.error(errorMessage);
+						if (options.verbose) { $log.error(errorMessage); }
 						deferred.reject(errorMessage, item, data);
 					}
 					else {
@@ -225,7 +226,18 @@
 				var deferred = $q.defer();
 				item.$promise = deferred.promise;
 				item.$promise.then(success);
-				item.$promise.catch(error);
+
+				if (options.onError) {
+					item.$promise.catch(function(data) {
+						options.onError(data);
+						return error && error(data);
+					});
+				} else {
+					if (error) {
+						item.$promise.error(error);
+					}
+				}
+
 				item.$resolved = false;
 				return deferred;
 			}
@@ -370,8 +382,9 @@
 				// fill in default action options
 				action = extend({}, {cache: true, isArray: false}, action);
 
-				function actionMethod(params, success, error) {
+				var actionMethod = function (params, success, error) {
 					var self = this;
+
 					if (action.fetchAfterReconnect) {
 						// let angular-resource-sails refetch important data after
 						// a server disconnect then reconnect happens
@@ -381,7 +394,7 @@
 					}
 
 					return handleRequest(isObject(this) ? this : null, params, action, success, error);
-				}
+				};
 
 				if (/^(POST|PUT|PATCH|DELETE)$/i.test(action.method)) {
 					// Add to instance methods to prototype with $ prefix, GET methods not included
@@ -489,7 +502,7 @@
 		else {
 			url.push(options.prefix);
 			url.push('/');
-			url.push(model + (options.pluralize ? "s" : ""));
+			url.push(model + (options.pluralize ? 's' : ''));
 			if (id) url.push('/' + id);
 		}
 		url.push(createQueryString(params));

@@ -78,3 +78,11 @@ function runProtractor(suite, cb) {
 			cb(e);
 		}).on('end', cb);
 }
+
+var jshint = require('gulp-jshint');
+
+gulp.task('lint', function() {
+  return gulp.src(['*.js', 'src/**/*.js', 'spec/**/*.js', 'e2e/**/*.js'])
+    .pipe(jshint())
+    .pipe(jshint.reporter('jshint-stylish'));
+});

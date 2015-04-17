@@ -53,7 +53,7 @@ describe('multiple sailsResources', function() {
 
 		it('should have different lists with the same data', function() {
 			expect(list1).not.toBe(list2);
-			expect(list1).toEqualValues(list2)
+			expect(list1).toEqualValues(list2);
 		});
 
 		it('should send created messages asynchronously', function() {
