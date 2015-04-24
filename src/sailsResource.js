@@ -36,7 +36,8 @@
 
 		var DEFAULT_ACTIONS = {
 			'get': {method: 'GET'},
-			'save': {method: 'POST'},
+			'save': {method: 'PUT'},
+			'create': {method: 'POST'},
 			'query': {method: 'GET', isArray: true},
 			'remove': {method: 'DELETE'},
 			'delete': {method: 'DELETE'}
@@ -181,7 +182,10 @@
 					}
 
 					var retVal;
-					if (action.method == 'POST' || action.method == 'PUT') { // Update individual instance of model
+					if (action.name == 'create') {
+						retVal = createResource(item, params, action, success, error);
+					}
+					else if (action.method == 'POST' || action.method == 'PUT') { // Update individual instance of model
 						retVal = createOrUpdateResource(item, params, action, success, error);
 					}
 					else if (action.method == 'DELETE') { // Delete individual instance of model
@@ -234,7 +238,7 @@
 					});
 				} else {
 					if (error) {
-						item.$promise.error(error);
+						item.$promise.catch(error);
 					}
 				}
 
@@ -317,6 +321,43 @@
 				return item.$promise;
 			}
 
+			function createResource(item, params, action, success, error) {
+				var deferred = attachPromise(item, success, error);
+
+				// prep data
+				var transformedData;
+				if (isFunction(action.transformRequest)) {
+					transformedData = JSON.parse(action.transformRequest(item));
+				}
+
+				// prevents prototype functions being sent
+				var data = copyAndClear(transformedData || item, {});
+
+				var url = buildUrl(model, null, action, params, options);
+
+				if (options.verbose) {
+					$log.info('sailsResource calling post ' + url);
+				}
+
+				socket.post(url, data, function (response, jwr) {
+					handleResponse(item, response, jwr, action, deferred, function (data) {
+						extend(item, data);
+						cache[item.id] = item;
+						$rootScope.$broadcast(MESSAGES.created, {
+							model: model,
+							id: item.id,
+							data: item
+						});
+					});
+				});
+
+				if (item.$nonInstanceCall) {
+					return item;
+				}
+
+				return item.$promise;
+			}
+
 			// Request handler function for DELETEs
 			function deleteResource(item, params, action, success, error) {
 				var deferred = attachPromise(item, success, error);
@@ -381,6 +422,7 @@
 			forEach(actions, function (action, name) {
 				// fill in default action options
 				action = extend({}, {cache: true, isArray: false}, action);
+				action.name = name;
 
 				var actionMethod = function (params, success, error) {
 					var self = this;
